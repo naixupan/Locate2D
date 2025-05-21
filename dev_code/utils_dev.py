@@ -345,3 +345,7 @@ def visualize_pose(image, rvec, tvec, corners, ids, marke_in_camera, camera_in_m
   # plt_image_path = os.path.join(SAVE_FOLDER, f"3D_coordinate{formatted_datetime}.png")
   # plt.savefig(plt_image_path, dpi=600, bbox_inches='tight')
   # plt.close()
+
+
+def compute_target2mark_marix(T_mark2base, T_target2base):
+    return np.linalg.inv(T_mark2base) @ T_target2base

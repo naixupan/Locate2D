@@ -32,6 +32,9 @@ def compute_aruco_pose(image_path,K,distCoeffs,marker_size, save_image=True, sav
     matrix_[:3, 3] = t_arr
     return matrix_
 
+
+
+
 def locate_aruco_marks(user_imput):
 
     global error_code, error_message
