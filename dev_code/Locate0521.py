@@ -38,10 +38,6 @@ def compute_aruco_pose(image_path,K,distCoeffs,marker_size, save_image=False):
     return matrix_
 
 
-
-
-
-
 if __name__ == '__main__':
     camera_parameter_path = '../Parameters/camera_params0513_chess.npz'
     calibrate_matrix_path = '../Parameters/cam2gripper_matrix0513_chess.npy'
@@ -85,4 +81,3 @@ if __name__ == '__main__':
     target_pose_ = HomogeneousMatrix2Pose(T_target2base_)
     print(f'(使用平均Mark点位姿计算)目标点位姿：{target_pose_}')
     
-
