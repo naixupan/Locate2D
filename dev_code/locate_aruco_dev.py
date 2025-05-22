@@ -152,7 +152,7 @@ def main():
 
         
         print(json.dumps(result_data, ensure_ascii=False, indent=4))
-        logging.info(json.dumps(result_data, ensure_ascii=False, indent=4))
+        logging.info(f'输出参数：{json.dumps(result_data, ensure_ascii=False, indent=4)}')
         error_code = 200
         error_message = ''
         print("end")
@@ -170,7 +170,7 @@ def main():
         result_data["rz"] = 0
   
         print(json.dumps(result_data, ensure_ascii=False, indent=4))
-        logging.info(json.dumps(result_data, ensure_ascii=False, indent=4))
+        logging.info(f'输出参数：{json.dumps(result_data, ensure_ascii=False, indent=4)}')
         print("end")
         error_code = 200
         error_message = ''
