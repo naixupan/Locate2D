@@ -145,10 +145,13 @@ def main():
           result_data["ry"] = 0
           result_data["rz"] = 0
           
-          error_code = 200
-          error_message = ''
+
         
         print(json.dumps(result_data, ensure_ascii=False, indent=4))
+        logging.info(json.dumps(result_data, ensure_ascii=False, indent=4))
+
+        error_code = 200
+        error_message = ''
         print("end")
       
       except Exception as e:
