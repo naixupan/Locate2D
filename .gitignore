@@ -1,2 +1,4 @@
 Images/
 code/locate_aruco.log
+dist/
+locate_aruco_dev.spec
