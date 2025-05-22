@@ -69,13 +69,11 @@ def locate_aruco_marks(user_imput):
     K , distCoeffs = load_camera_parameters(camera_prameter_path)
     
     cam2gripperMatrix = load_calibrate_matrix(hand_eye_prameter_path)
+
+    target2markMatrix = load_calibrate_matrix('./target2mark_matrix0521.npy')
+
     
     image_path_list = image_path.split('/')
-    # print(image_path_list)
-    
-    # aruco_image_path1 = f'{image_path_list[0]}/ArUcoTest{image_path_list[1]}-{image_path_list[2]}-1.bmp'
-    # aruco_image_path2 = f'{image_path_list[0]}/ArUcoTest{image_path_list[1]}-{image_path_list[2]}-2.bmp'
-    # aruco_image_path3 = f'{image_path_list[0]}/ArUcoTest{image_path_list[1]}-{image_path_list[2]}-3.bmp'
     
     aruco_image_path1 = f'{image_path}-1.bmp'
     aruco_image_path2 = f'{image_path}-2.bmp'
@@ -114,16 +112,19 @@ def locate_aruco_marks(user_imput):
       
     for i in range(6):
       avg_pose[i] = total_pose[i] / 3
-      
-      
+
+    T_mark2base = Pose2HomogeneousMatrix(avg_pose)
+    T_target2mark = target2markMatrix
+    T_target2base_ = T_mark2base @ T_target2mark
+    target_pose_ = HomogeneousMatrix2Pose(T_target2base_)
     result_data["code"] = error_code
     result_data["msg"] = error_message
-    result_data["x"] = avg_pose[0]
-    result_data["y"] = avg_pose[1]
-    result_data["z"] = avg_pose[2]
-    result_data["rx"] = avg_pose[3]
-    result_data["ry"] = avg_pose[4]
-    result_data["rz"] = avg_pose[5]
+    result_data["x"] = target_pose_[0]
+    result_data["y"] = target_pose_[1]
+    result_data["z"] = target_pose_[2]
+    result_data["rx"] = target_pose_[3]
+    result_data["ry"] = target_pose_[4]
+    result_data["rz"] = target_pose_[5]
     return result_data
       
 
@@ -148,10 +149,12 @@ def main():
           result_data["ry"] = 0
           result_data["rz"] = 0
           
-          error_code = 200
-          error_message = ''
+
         
         print(json.dumps(result_data, ensure_ascii=False, indent=4))
+        logging.info(json.dumps(result_data, ensure_ascii=False, indent=4))
+        error_code = 200
+        error_message = ''
         print("end")
       
       except Exception as e:
@@ -167,6 +170,7 @@ def main():
         result_data["rz"] = 0
   
         print(json.dumps(result_data, ensure_ascii=False, indent=4))
+        logging.info(json.dumps(result_data, ensure_ascii=False, indent=4))
         print("end")
         error_code = 200
         error_message = ''
