@@ -40,11 +40,12 @@ def compute_aruco_pose(image_path,K,distCoeffs,marker_size, save_image=False):
 
 if __name__ == '__main__':
     camera_parameter_path = '../Parameters/camera_params0513_chess.npz'
+    
     calibrate_matrix_path = '../Parameters/cam2gripper_matrix0513_chess.npy'
     target2mark_matrix_path = '../Parameters/target2mark_matrix0521.npy'
 
     date = '0523'
-    count = '1'
+    count = '3'
 
     aruco_image_path = [f'../Images/ArUcoImages/ArUcoTest{date}-{count}-1.bmp',f'../Images/ArUcoImages/ArUcoTest{date}-{count}-2.bmp', f'../Images/ArUcoImages/ArUcoTest{date}-{count}-3.bmp']
 
@@ -52,7 +53,7 @@ if __name__ == '__main__':
     cam2gripper = load_calibrate_matrix(calibrate_matrix_path)
     T_target2mark = load_calibrate_matrix(target2mark_matrix_path)
 
-    robot_pose = [102.4626, -734.0780, -111.7602, -179.5619, 0.9846, -97.5354]
+    robot_pose = [109.4264, -726.7662, -111.4275, 179.8288, -1.5646, -84.9986]
     gripper2base = Pose2HomogeneousMatrix(robot_pose)
 
     toltal_pose = [0,0,0,0,0,0]
