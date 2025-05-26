@@ -8,3 +8,22 @@ import os
 from scipy.spatial.transform import Rotation as R
 import math
 from utils_dev import *
+
+def compute_mark2camera(image_folder, image_number, K, ditCoeffs, ):
+  t_mark2camera = []
+  R_mark2camera = []
+  pass
+
+def compute_grriper2base():
+  pass
+
+def calilbrate_eye_in_hand():
+  pass
+
+
+def main():
+  pass
+
+
+if __name__ == '__main__':
+  main()
