@@ -36,6 +36,12 @@ pyinstaller .\
 输出:
 * output_perameter_path:相机参数保存路径
 
+------
+2025年5月27日
+
+更新内容：**calibrate_eye_in_hand_dev.py**
+
+
 
 
 
