@@ -136,11 +136,62 @@ def calilbrate_eye_in_hand(R_gripper2base, t_gripper2base,R_mark2camera, t_mark2
     np.save(save_path, T)
     return T
 
+# 手眼标定测试
 def clibrate_test(R_gripper2base, t_gripper2base, R_mark2camera, t_mark2camera,T_camera2gripper,image_number):
     global error_code, error_message
+    T_mark2camera = []
+    T_gripper2base = []
+    for i in range(image_number):
+        T_mark2camera_ = R_T2HomogeneousMatrix(R_mark2camera[i], t_mark2camera[i])
+        T_gripper2base_ = R_T2HomogeneousMatrix(R_gripper2base[i], t_gripper2base[i])
+        T_mark2camera.append(T_mark2camera_)
+        T_gripper2base.append(T_gripper2base_)
+    toltal_pose = [0, 0, 0, 0, 0, 0]
 
+    max_pose = [0, 0, 0, 0, 0, 0]
+    min_pose = [0, 0, 0, 0, 0, 0]
+    avg_pose = [0, 0, 0, 0, 0, 0]
+    var_pose = [0, 0, 0, 0, 0, 0]
 
+    x_list = []
+    y_list = []
+    z_list = []
+    rx_list = []
+    ry_list = []
+    rz_list = []
 
+    pose_list = [x_list, y_list, z_list, rx_list, ry_list, rz_list]
+
+    for i in range(image_number):
+        T_board2base = T_gripper2base[i] @ T_camera2gripper @ T_mark2camera[i]
+        # print(f'T_board2base[{i}] : \n{T_board2base}')
+        R_board2base, t_board2base = HomogeneousMatrix2R_T(T_board2base)
+        r_pose = rotateMatrixToEulerAngle(R_board2base.T, 'xyz')
+
+        result_pose = [t_board2base[0], t_board2base[1], t_board2base[2], r_pose[0], r_pose[1], r_pose[2]]
+
+        logging.info(
+            f'第{i}张标定板位姿：\n x:{t_board2base[0]}; y:{t_board2base[1]}; z:{t_board2base[2]}; \n rx:{r_pose[0]}; ry:{r_pose[1]}; rz:{r_pose[2]};')
+
+        for j, pose in enumerate(result_pose):
+            toltal_pose[j] +=pose
+            pose_list[j].append(pose)
+            if i == 0:
+                max_pose[j] = pose
+                min_pose[j] = pose
+            else:
+                if pose > max_pose[j]:
+                    max_pose[j] = pose
+                if pose < min_pose[j]:
+                    min_pose[j] = pose
+
+    for i, poses in enumerate(pose_list):
+        avg_pose[i] = np.mean(poses)
+        var_pose[i] = np.var(poses)
+    logging.info(f'标定板位姿最大值:x:{max_pose[0]},y:{max_pose[1]},z:{max_pose[2]},rx:{max_pose[3]},ry:{max_pose[4]},rz:{max_pose[5]}')
+    logging.info(f'标定板位姿最小值:x:{min_pose[0]},y:{min_pose[1]},z:{min_pose[2]},rx:{min_pose[3]},ry:{min_pose[4]},rz:{min_pose[5]}')
+    logging.info(f'平均标定板位姿:x:{avg_pose[0]},y:{avg_pose[1]},z:{avg_pose[2]},rx:{avg_pose[3]},ry:{avg_pose[4]},rz:{avg_pose[5]}')
+    logging.info(f'位姿方差:x:{var_pose[0]},y:{var_pose[1]},z:{var_pose[2]},rx:{var_pose[3]},ry:{var_pose[4]},rz:{var_pose[5]}')
 
 def calibrate(user_input):
     global error_code, error_message
@@ -211,18 +262,8 @@ def calibrate(user_input):
     T_camera2gripper = calilbrate_eye_in_hand(R_gripper2base, t_gripper2base,R_mark2camera, t_mark2camera,
                                               calibrate_patameter_save_path)
 
-    logging.info("手眼标定结果测试：")
-
-
-
-
-
-
-
-
-
-
-
+    logging.info("手眼标定结果测试")
+    clibrate_test(R_gripper2base, t_gripper2base, R_mark2camera, t_mark2camera,T_camera2gripper,image_number)
 
 
 def main():
