@@ -5,3 +5,4 @@ dist/
 locate_aruco_dev.spec
 .idea/
 *.log
+build/
