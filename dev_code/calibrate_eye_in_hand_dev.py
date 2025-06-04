@@ -92,7 +92,7 @@ def compute_mark2camera(image_folder, image_number, K, distCoeffs,serial_number,
 
     return t_mark2camera, R_mark2camera
 
-def compute_grriper2base(pose_list):
+def compute_gripper2base(pose_list):
     t_gripper2base = []
     R_gripper2base = []
     for i, pose in enumerate(pose_list):
@@ -193,7 +193,7 @@ def clibrate_test(R_gripper2base, t_gripper2base, R_mark2camera, t_mark2camera,T
     logging.info(f'平均标定板位姿:x:{avg_pose[0]},y:{avg_pose[1]},z:{avg_pose[2]},rx:{avg_pose[3]},ry:{avg_pose[4]},rz:{avg_pose[5]}')
     logging.info(f'位姿方差:x:{var_pose[0]},y:{var_pose[1]},z:{var_pose[2]},rx:{var_pose[3]},ry:{var_pose[4]},rz:{var_pose[5]}')
 
-def calibrate(user_input):
+def calibrate_(user_input):
     global error_code, error_message
     result_data = {}
 
@@ -218,7 +218,7 @@ def calibrate(user_input):
         camera_parameter = config.get("camera_parameter")   # 相机内参名称
         pattern_size = config.get("pattern_size")  # 标定板规格，类型为字符串如"9 16"，使用空格隔开
         square_size = config.get("square_size")     # 标定板单位尺寸，类型为字符串
-        serial_number = config.get("serial_number")
+        serial_number = config.get("serial_number") # 序列号
 
     except Exception as e:
         logging.error(f'[{e}')
@@ -257,7 +257,7 @@ def calibrate(user_input):
                                                        board_type='chessboard', pattern_size = pattern_size_turple,
                                                        square_size = square_size,
                                                        save_corner = True, save_path=image_save_path)
-    t_gripper2base, R_gripper2base = compute_grriper2base(poses_list)
+    t_gripper2base, R_gripper2base = compute_gripper2base(poses_list)
 
     T_camera2gripper = calilbrate_eye_in_hand(R_gripper2base, t_gripper2base,R_mark2camera, t_mark2camera,
                                               calibrate_patameter_save_path)
@@ -275,10 +275,11 @@ def main():
             logging.info(f"exit time :{datetime.datetime.now()}")
             return
         try:
-            calibrate(user_input)
+            print(f"calibrate type: {type(calibrate_)}")
+            calibrate_(user_input)
 
         except Exception as e:
-            logging.error(f"Error: {e}")
+            logging.error(f"Error: {e}  0001")
 
 
 

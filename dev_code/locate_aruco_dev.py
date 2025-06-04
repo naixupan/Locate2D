@@ -70,7 +70,7 @@ def locate_aruco_marks(user_imput):
     
     cam2gripperMatrix = load_calibrate_matrix(hand_eye_prameter_path)
 
-    target2markMatrix = load_calibrate_matrix('./target2mark_matrix0523.npy')
+    target2markMatrix = load_calibrate_matrix('./target2mark_matrix0604.npy')
 
     
     image_path_list = image_path.split('/')
