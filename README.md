@@ -41,6 +41,33 @@ pyinstaller .\
 
 更新内容：**calibrate_eye_in_hand_dev.py**
 
+-------
+2025年6月15日
+
+更新内容：**calibrate_eye_in_hand_dev.py**
+
+修改**是否需要进行内参标定**，每次标定均进行内参标定。
+
+修改后参数：
+* image_path:图像文件夹路径，标定用机械臂坐标文件亦在其中;
+* image_number:图像数量;
+* pose_file_name:机械臂坐标文件名;
+* parameter_save_path:标定参数存放位置，包括相机内参和手眼标定参数;
+* image_save_path:标定结果保存路径;
+* pattern_size：标定板规格；
+* square_size：标定板单位尺寸；
+* serial_number：标定序列号，用于区分不同的标定结果;
+
+输出:
+* 相机内参保存路径；
+* 手眼标定参数保存路径。
+
+D:/SC_MES/Locate2D/Images/CalibrateImages20250613
+
+输入参数示例：
+```json
+"{\"image_path\":\"D:/SC_MES/Locate2D/Images/CalibrateImages20250613\",\"image_number\":\"19\",\"pose_file_name\":\"poses.txt\",\"parameter_save_path\":\"D:/SC_MES/Locate2D/Parameters\",\"image_save_path\":\"D:/SC_MES/Locate2D/Images/ResultImages/Calibrate\",\"pattern_size\":\"9 6\",\"square_size\":\"0.003\",\"serial_number\":\"20250615\"}"
+```
 
 
 
