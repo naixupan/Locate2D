@@ -199,7 +199,7 @@ def calibrate_(user_input):
 
     try:
         config = json.loads(user_input)
-        config = eval(config)
+        # config = eval(config)
     except Exception as e:
         logging.error(e)
         error_code = 401
@@ -280,6 +280,8 @@ def main():
 
         except Exception as e:
             logging.error(f"Error: {e}  0001")
+            logging.info(f"error code: {error_code}")
+            logging.info(f"error message: {error_message}")
 
 
 
