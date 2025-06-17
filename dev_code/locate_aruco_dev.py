@@ -52,11 +52,17 @@ def locate_aruco_marks(user_imput):
 
     logging.info(f'输入参数：{config}')
     try:
+        locate_type = config['locate_type']
         image_path = config.get("image_path")
         robot_poses = config.get("robot_pose")
         camera_prameter_path = config.get("camera_prameter_path")
         hand_eye_prameter_path = config.get("hand_eye_prameter_path")
         save_folder = config.get("save_path")
+        relative_position_path = config.get("relative_position_path")
+
+        # # 1表示第一次定位
+        # if locate_type == '1':
+        #     # relative_position_path = config.get("relative_position_path")
 
         
 
@@ -70,63 +76,69 @@ def locate_aruco_marks(user_imput):
     
     cam2gripperMatrix = load_calibrate_matrix(hand_eye_prameter_path)
 
-    target2markMatrix = load_calibrate_matrix('./target2mark_matrix0604.npy')
+    target2markMatrix = load_calibrate_matrix(relative_position_path)
 
-    
     image_path_list = image_path.split('/')
-    
     aruco_image_path1 = f'{image_path}-1.bmp'
     aruco_image_path2 = f'{image_path}-2.bmp'
     aruco_image_path3 = f'{image_path}-3.bmp'
-    
     save_name = f'{image_path_list[-1]}.png'
-    
     save_path = f'{save_folder}/{save_name}'
-    
-    
+
     logging.info(f'image_path1:{aruco_image_path1}')
     logging.info(f'image_path2:{aruco_image_path2}')
     logging.info(f'image_path3:{aruco_image_path3}')
-    
+
     aruco_image_path = [aruco_image_path1, aruco_image_path2, aruco_image_path3]
-    
     pose_list = robot_poses.split(' ')
     # print(pose_list)
-    
     robot_pose_num = []
-    
+
     for pose in pose_list:
-      pose_num = float(pose)
-      robot_pose_num.append(pose_num)
-    
+        pose_num = float(pose)
+        robot_pose_num.append(pose_num)
     gripper2base = Pose2HomogeneousMatrix(robot_pose_num)
     total_pose = [0, 0, 0, 0, 0, 0]
     avg_pose = [0, 0, 0, 0, 0, 0]
     for i in range(len(aruco_image_path)):
-      target2camera = compute_aruco_pose(aruco_image_path[i],K, distCoeffs, 0.03, True, save_path)
-      target2base = gripper2base @ cam2gripperMatrix @ target2camera
-      
-      target_pose = HomogeneousMatrix2Pose(target2base)
-      for j in range(6):
-        total_pose[j] += target_pose[j]
-      
+        target2camera = compute_aruco_pose(aruco_image_path[i], K, distCoeffs, 0.03, True, save_path)
+        target2base = gripper2base @ cam2gripperMatrix @ target2camera
+        target_pose = HomogeneousMatrix2Pose(target2base)
+        for j in range(6):
+            total_pose[j] += target_pose[j]
     for i in range(6):
-      avg_pose[i] = total_pose[i] / 3
+        avg_pose[i] = total_pose[i] / 3
 
-    T_mark2base = Pose2HomogeneousMatrix(avg_pose)
-    T_target2mark = target2markMatrix
-    T_target2base_ = T_mark2base @ T_target2mark
-    target_pose_ = HomogeneousMatrix2Pose(T_target2base_)
-    result_data["code"] = error_code
-    result_data["msg"] = error_message
-    result_data["x"] = target_pose_[0]
-    result_data["y"] = target_pose_[1]
-    result_data["z"] = target_pose_[2]
-    result_data["rx"] = target_pose_[3]
-    result_data["ry"] = target_pose_[4]
-    result_data["rz"] = target_pose_[5]
+    # 1表示第一次定位
+    if locate_type == '1':
+        dx = target2markMatrix[0]
+        dy = target2markMatrix[1]
+        dz = target2markMatrix[2]
+        result_data["code"] = error_code
+        result_data["msg"] = error_message
+
+        result_data["x"] = avg_pose[0] + dx
+        result_data["y"] = avg_pose[1] + dy
+        result_data["z"] = avg_pose[2] + dz
+        result_data["rx"] = avg_pose[3]
+        result_data["ry"] = avg_pose[4]
+        result_data["rz"] = avg_pose[5]
+    # 2表示第二次定位
+    elif locate_type == '2':
+        T_mark2base = Pose2HomogeneousMatrix(avg_pose)
+        T_target2mark = target2markMatrix
+        T_target2base_ = T_mark2base @ T_target2mark
+        target_pose_ = HomogeneousMatrix2Pose(T_target2base_)
+        result_data["code"] = error_code
+        result_data["msg"] = error_message
+        result_data["x"] = target_pose_[0]
+        result_data["y"] = target_pose_[1]
+        result_data["z"] = target_pose_[2]
+        result_data["rx"] = target_pose_[3]
+        result_data["ry"] = target_pose_[4]
+        result_data["rz"] = target_pose_[5]
+
     return result_data
-      
 
 def main():
     global  error_message
@@ -148,9 +160,7 @@ def main():
           result_data["rx"] = 0
           result_data["ry"] = 0
           result_data["rz"] = 0
-          
 
-        
         print(json.dumps(result_data, ensure_ascii=False, indent=4))
         logging.info(f'输出参数：{json.dumps(result_data, ensure_ascii=False, indent=4)}')
         error_code = 200
