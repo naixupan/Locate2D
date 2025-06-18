@@ -68,7 +68,39 @@ D:/SC_MES/Locate2D/Images/CalibrateImages20250613
 ```json
 "{\"image_path\":\"D:/SC_MES/Locate2D/Images/CalibrateImages20250613\",\"image_number\":\"19\",\"pose_file_name\":\"poses.txt\",\"parameter_save_path\":\"D:/SC_MES/Locate2D/Parameters\",\"image_save_path\":\"D:/SC_MES/Locate2D/Images/ResultImages/Calibrate\",\"pattern_size\":\"9 6\",\"square_size\":\"0.003\",\"serial_number\":\"20250615\"}"
 ```
+-------
+2025年6月18日
+
+更新内容：
+* **calibrate_eye_in_hand_dev.py**
+* **locate_aruco_dev.py**
+* **utils_dev.py**
 
 
+**calibrate_eye_in_hand_dev.py**
+* 添加相对位置计算。
 
+入参变化：
+* calibrate_type：标定类型，1表示进行手眼标定，其余参数参考手眼标定参数；2表示进行相对位置计算。
+* 标定类型为2时的入参：
+  * image_path：计算Mark点位置时的图片；
+  * target_pose：目标位姿；
+  * robot_pose：机械臂拍照时的位姿；
+  * camera_prameter_path：相机内参路径；
+  * hand_eye_prameter_path：手眼标定参数路径；
+  * comput_type：计算类型，1表示第一阶段参数计算，2表示第二阶段计算；
+  * parameter_save_path：参数保存路径。
+* 关于计算类型参数：
+  * 1：只计算x,y,z,保存为.npy文件
+  * 2：同时计算x,y,z,rx,ry,rz，并保存为.npy文件。
+
+
+**calibrate_eye_in_hand_dev.py**
+
+* 可以计算2次拍照的相对位置
+
+入参变化：
+* 添加一个参数**locate_type**：
+  * 1：表示第一次定位，此时仅计算第二次拍照位置的x,y,z, 不计算旋转角，但会返回旋转角，请上位机不要采用；
+  * 2：表示第二次定位，上位机需要采用x,y,z,rz。
 
