@@ -2,7 +2,7 @@ Images/
 code/locate_aruco.log
 dev_code/locate_aruco.log
 dist/
-locate_aruco_dev.spec
+*.spec
 .idea/
 *.log
 build/
