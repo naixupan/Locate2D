@@ -232,6 +232,7 @@ def calibrate_(user_input):
             # 计算类型分为第一阶段拍照点计算和第二阶段放料位置的计算
             comput_type = config.get("comput_type")
             parameter_save_path = config.get("parameter_save_path")
+            serial_number = config.get("serial_number")  # 序列号
 
     except Exception as e:
         logging.error(f'[{e}')
@@ -240,8 +241,8 @@ def calibrate_(user_input):
         return result_data
     if calibrate_type == '1':
         pose_file_path = os.path.join(image_path, pose_file_name)
-        calibrate_patameter_save_path = f"{parameter_save_path}/camera2gripper_{serial_number}_chess.npy"
-        camera_parameter_save_path = f"{parameter_save_path}/camera_parameter_{serial_number}_chess.npz"
+        calibrate_patameter_save_path = f"{parameter_save_path}/camera2gripper_chess.npy"
+        camera_parameter_save_path = f"{parameter_save_path}/camera_parameter_chess.npz"
         image_number = int(image_number)
         pattern_size_list = pattern_size.split(' ')
         pattern_size_turple = tuple(int(data) for data in pattern_size_list)
@@ -260,6 +261,9 @@ def calibrate_(user_input):
                                                   calibrate_patameter_save_path)
         logging.info("手眼标定结果测试")
         clibrate_test(R_gripper2base, t_gripper2base, R_mark2camera, t_mark2camera,T_camera2gripper,image_number)
+        result_data["calibrate_patameter"] = calibrate_patameter_save_path
+        result_data["camera_parameter"] = camera_parameter_save_path
+        # return result_data
     elif calibrate_type == '2':
 
         K, distCoeffs = load_camera_parameters(camera_prameter_path)
@@ -303,15 +307,21 @@ def calibrate_(user_input):
             logging.info(f'拍照位1——>拍照位2 相对位姿:{d_pose_arr}')
             parameter_save_name = f"{parameter_save_path}/shot_pose1_to_pose2.npy"
             np.save(parameter_save_name, d_pose_arr)
+            result_data["relative_position_1"] = parameter_save_name
+            # return result_data
         # 2表示计算垂直拍照位到工作位的相对位姿
         elif comput_type == '2':
             T_mark2base = Pose2HomogeneousMatrix(avg_pose)
             T_target2base = Pose2HomogeneousMatrix(target_pose)
             T_target2mark = compute_target2mark_marix(T_mark2base, T_target2base)
             logging.info(f'拍照位2——>工作位置 相对位姿:{T_target2mark}')
-            parameter_save_name = f"{parameter_save_path}/shot_pose2_to_target.npy"
+            parameter_save_name = f"{parameter_save_path}/shot_pose2_to_target_{serial_number}.npy"
             np.save(parameter_save_name, T_target2mark)
-
+            result_data["relative_position_2"] = parameter_save_name
+            # return result_data
+    result_data["error_code"] = error_code
+    result_data["error_msg"] = error_message
+    return result_data
 
 def main():
     global error_message
@@ -322,13 +332,17 @@ def main():
             logging.info(f"exit time :{datetime.datetime.now()}")
             return
         try:
-            print(f"calibrate type: {type(calibrate_)}")
-            calibrate_(user_input)
+            logging.info(f"calibrate type: {type(calibrate_)}")
+            result_data = calibrate_(user_input)
+
+            print(json.dumps(result_data, indent=4, ensure_ascii=False))
+            print("end")
 
         except Exception as e:
             logging.error(f"Error: {e}  0001")
             logging.info(f"error code: {error_code}")
             logging.info(f"error message: {error_message}")
+            print("end")
 
 
 if __name__ == '__main__':
