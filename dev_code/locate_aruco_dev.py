@@ -5,6 +5,7 @@ import numpy as np
 from utils_dev import *
 import logging
 import datetime
+import time
 
 error_code = 200
 error_message = ""
@@ -39,6 +40,7 @@ def locate_aruco_marks(user_imput):
 
     global error_code, error_message
     result_data = {}
+    time_begin = datetime.datetime.now()
 
     try:
         config = json.loads(user_imput)
@@ -98,16 +100,22 @@ def locate_aruco_marks(user_imput):
         pose_num = float(pose)
         robot_pose_num.append(pose_num)
     gripper2base = Pose2HomogeneousMatrix(robot_pose_num)
-    total_pose = [0, 0, 0, 0, 0, 0]
+    
     avg_pose = [0, 0, 0, 0, 0, 0]
-    for i in range(len(aruco_image_path)):
-        target2camera = compute_aruco_pose(aruco_image_path[i], K, distCoeffs, 0.03, True, save_path)
-        target2base = gripper2base @ cam2gripperMatrix @ target2camera
-        target_pose = HomogeneousMatrix2Pose(target2base)
-        for j in range(6):
-            total_pose[j] += target_pose[j]
+    # total_pose = [0, 0, 0, 0, 0, 0]
+    # for i in range(len(aruco_image_path)):
+    #     target2camera = compute_aruco_pose(aruco_image_path[i], K, distCoeffs, 0.03, True, save_path)
+    #     target2base = gripper2base @ cam2gripperMatrix @ target2camera
+    #     target_pose = HomogeneousMatrix2Pose(target2base)
+    #     for j in range(6):
+    #         total_pose[j] += target_pose[j]
+    # for i in range(6):
+    #     avg_pose[i] = total_pose[i] / 3
+    target2camera = compute_aruco_pose(aruco_image_path[0], K, distCoeffs, 0.03, True, save_path)
+    target2base = gripper2base @ cam2gripperMatrix @ target2camera
+    target_pose = HomogeneousMatrix2Pose(target2base)
     for i in range(6):
-        avg_pose[i] = total_pose[i] / 3
+        avg_pose[i] = target_pose[i]
 
     # 1表示第一次定位
     if locate_type == '1':
@@ -137,6 +145,9 @@ def locate_aruco_marks(user_imput):
         result_data["rx"] = target_pose_[3]
         result_data["ry"] = target_pose_[4]
         result_data["rz"] = target_pose_[5]
+    
+    end_time = datetime.datetime.now()
+    logging.info(f"第{locate_type}阶段算法用时：{end_time - time_begin}")
 
     return result_data
 
