@@ -16,25 +16,22 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 
-def compute_aruco_pose(image_path,K,distCoeffs,marker_size, save_image=True, save_path = None):
-
-    image, corners, ids = detect_aruco_marks(image_path)
-    if ids is not None:
-        rvec, tvec, mark_in_camera, camera_in_mark = compute_camera_pose(corners, ids, K, distCoeffs,marker_size)
-        R, _ = cv2.Rodrigues(rvec)
-        # print(f"相机平移向量：{mark_in_camera}")
-        # print(f"相机位置：{camera_in_mark}")
-        if save_image:
-            visualize_pose(image, rvec, tvec, corners, ids, mark_in_camera, camera_in_mark, K, distCoeffs,save_path)
-        R_arr = np.array(R, dtype=np.float64)
-    t_arr = np.array(tvec, dtype=np.float64).flatten()
-    matrix_ = np.eye(4, dtype=np.float32)
-    matrix_[:3, :3] = R_arr
-    matrix_[:3, 3] = t_arr
-    return matrix_
-
-
-
+# def compute_aruco_pose(image_path,K,distCoeffs,marker_size, save_image=True, save_path = None):
+#
+#     image, corners, ids = detect_aruco_marks(image_path)
+#     if ids is not None:
+#         rvec, tvec, mark_in_camera, camera_in_mark = compute_camera_pose(corners, ids, K, distCoeffs,marker_size)
+#         R, _ = cv2.Rodrigues(rvec)
+#         # print(f"相机平移向量：{mark_in_camera}")
+#         # print(f"相机位置：{camera_in_mark}")
+#         if save_image:
+#             visualize_pose(image, rvec, tvec, corners, ids, mark_in_camera, camera_in_mark, K, distCoeffs,save_path)
+#         R_arr = np.array(R, dtype=np.float64)
+#     t_arr = np.array(tvec, dtype=np.float64).flatten()
+#     matrix_ = np.eye(4, dtype=np.float32)
+#     matrix_[:3, :3] = R_arr
+#     matrix_[:3, 3] = t_arr
+#     return matrix_
 
 def locate_aruco_marks(user_imput):
 
@@ -111,7 +108,35 @@ def locate_aruco_marks(user_imput):
     #         total_pose[j] += target_pose[j]
     # for i in range(6):
     #     avg_pose[i] = total_pose[i] / 3
-    target2camera = compute_aruco_pose(aruco_image_path[0], K, distCoeffs, 0.03, True, save_path)
+    target2camera, corners = compute_aruco_pose(aruco_image_path[0], K, distCoeffs, 0.03, True, save_path)
+    ############ 中心点位置判断
+    if locate_type == '1' :
+        image_ = cv2.imread(aruco_image_path[0])
+        image_gray = cv2.cvtColor(image_, cv2.COLOR_BGR2GRAY)
+        at_center_ = at_center(image_gray, corners)
+        if at_center_ == False:
+            logging.info(f"相机在Mark点坐标系下位姿：\n{target2camera}")
+
+            logging.info(f'Mark点中心点未在中心范围内，需要移动')
+            # 修改相机位姿的x，y的值
+            camera2base = gripper2base @ cam2gripperMatrix
+
+            logging.info(f"相机当前位姿：\n{camera2base}")
+
+            target2base = gripper2base @ cam2gripperMatrix @ target2camera
+
+            camera2base[0][3] = target2base[0][3]
+            camera2base[1][3] = target2base[1][3]
+
+            logging.info(f"移动后相机位姿：\n{camera2base}")
+
+            gripper2base_ = camera2base @ np.linalg.inv(cam2gripperMatrix)
+
+            logging.info(f"\n移动前机械臂位姿：\n{gripper2base}")
+            logging.info(f"\n移动后机械臂位姿：\n{gripper2base_}")
+
+            target_pose_ = HomogeneousMatrix2Pose(gripper2base_)
+
     target2base = gripper2base @ cam2gripperMatrix @ target2camera
     target_pose = HomogeneousMatrix2Pose(target2base)
     for i in range(6):
@@ -119,18 +144,32 @@ def locate_aruco_marks(user_imput):
 
     # 1表示第一次定位
     if locate_type == '1':
-        dx = target2markMatrix[0]
-        dy = target2markMatrix[1]
-        dz = target2markMatrix[2]
-        result_data["code"] = error_code
-        result_data["msg"] = error_message
 
-        result_data["x"] = avg_pose[0] + dx
-        result_data["y"] = avg_pose[1] + dy
-        result_data["z"] = avg_pose[2] + dz
-        result_data["rx"] = avg_pose[3]
-        result_data["ry"] = avg_pose[4]
-        result_data["rz"] = avg_pose[5]
+        if at_center_ == False:
+            result_data["code"] = error_code
+            result_data["msg"] = error_message
+            result_data["at_center"] = '0'
+            result_data["x"] = target_pose_[0]
+            result_data["y"] = target_pose_[1]
+            result_data["z"] = robot_pose_num[2]
+            result_data["rx"] = robot_pose_num[3]
+            result_data["ry"] = robot_pose_num[4]
+            result_data["rz"] = robot_pose_num[5]
+
+        else:
+            dx = target2markMatrix[0]
+            dy = target2markMatrix[1]
+            dz = target2markMatrix[2]
+            result_data["code"] = error_code
+            result_data["msg"] = error_message
+            result_data["at_center"] = '1'
+
+            result_data["x"] = avg_pose[0] + dx
+            result_data["y"] = avg_pose[1] + dy
+            result_data["z"] = avg_pose[2] + dz
+            result_data["rx"] = avg_pose[3]
+            result_data["ry"] = avg_pose[4]
+            result_data["rz"] = avg_pose[5]
     # 2表示第二次定位
     elif locate_type == '2':
         T_mark2base = Pose2HomogeneousMatrix(avg_pose)
