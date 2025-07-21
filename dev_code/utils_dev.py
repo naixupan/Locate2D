@@ -365,4 +365,20 @@ def compute_aruco_pose(image_path,K,distCoeffs,marker_size, save_image=True, sav
     matrix_ = np.eye(4, dtype=np.float32)
     matrix_[:3, :3] = R_arr
     matrix_[:3, 3] = t_arr
-    return matrix_
+    return matrix_ ,corners
+
+def at_center(image, corners):
+    image_height = image.shape[0]
+    image_width = image.shape[1]
+
+    # Mark点中心点坐标
+    mark_center_x = np.mean(corners[0][0][:, 0])
+    mark_center_y = np.mean(corners[0][0][:, 1])
+
+    at_center = False
+
+    if mark_center_x > image_width // 3 and mark_center_x < (image_width // 3) * 2:
+        if mark_center_y > image_height // 3 and mark_center_y < (image_height // 3) * 2:
+            at_center = True
+
+    return at_center

@@ -292,7 +292,7 @@ def calibrate_(user_input):
             mark_pose = HomogeneousMatrix2Pose(mark2base)
             logging.info(f'mark_pose_{i}:{mark_pose}')
             for j in range(6):
-                total_pose[j] += target_pose[j]
+                total_pose[j] += mark_pose[j]
         for i in range(6):
             avg_pose[i] = total_pose[i] / 3
         logging.info(f'avg_pose:{avg_pose}')
@@ -312,7 +312,7 @@ def calibrate_(user_input):
         # 2表示计算垂直拍照位到工作位的相对位姿
         elif comput_type == '2':
             T_mark2base = Pose2HomogeneousMatrix(avg_pose)
-            T_target2base = Pose2HomogeneousMatrix(target_pose)
+            T_target2base = Pose2HomogeneousMatrix(target_pose_f)
             T_target2mark = compute_target2mark_marix(T_mark2base, T_target2base)
             logging.info(f'拍照位2——>工作位置 相对位姿:{T_target2mark}')
             parameter_save_name = f"{parameter_save_path}/shot_pose2_to_target_{serial_number}.npy"
