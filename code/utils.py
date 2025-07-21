@@ -345,3 +345,38 @@ def visualize_pose(image, rvec, tvec, corners, ids, marke_in_camera, camera_in_m
   # plt_image_path = os.path.join(SAVE_FOLDER, f"3D_coordinate{formatted_datetime}.png")
   # plt.savefig(plt_image_path, dpi=600, bbox_inches='tight')
   # plt.close()
+def compute_target2mark_marix(T_mark2base, T_target2base):
+    return np.linalg.inv(T_mark2base) @ T_target2base
+
+def compute_aruco_pose(image_path,K,distCoeffs,marker_size, save_image=True, save_path = None):
+
+    image, corners, ids = detect_aruco_marks(image_path)
+    if ids is not None:
+        rvec, tvec, mark_in_camera, camera_in_mark = compute_camera_pose(corners, ids, K, distCoeffs,marker_size)
+        R, _ = cv2.Rodrigues(rvec)
+        # print(f"相机平移向量：{mark_in_camera}")
+        # print(f"相机位置：{camera_in_mark}")
+        if save_image:
+            visualize_pose(image, rvec, tvec, corners, ids, mark_in_camera, camera_in_mark, K, distCoeffs,save_path)
+        R_arr = np.array(R, dtype=np.float64)
+    t_arr = np.array(tvec, dtype=np.float64).flatten()
+    matrix_ = np.eye(4, dtype=np.float32)
+    matrix_[:3, :3] = R_arr
+    matrix_[:3, 3] = t_arr
+    return matrix_ ,corners
+
+def at_center(image, corners):
+    image_height = image.shape[0]
+    image_width = image.shape[1]
+
+    # Mark点中心点坐标
+    mark_center_x = np.mean(corners[0][0][:, 0])
+    mark_center_y = np.mean(corners[0][0][:, 1])
+
+    at_center = False
+
+    if mark_center_x > image_width // 3 and mark_center_x < (image_width // 3) * 2:
+        if mark_center_y > image_height // 3 and mark_center_y < (image_height // 3) * 2:
+            at_center = True
+
+    return at_center
