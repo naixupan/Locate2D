@@ -4,6 +4,11 @@
 日期：2025年4月3日
 功能：工具函数
 版本：V1.0
+
+日期：2025年7月22日
+版本：V1.1
+
+
 '''
 import os
 from datetime import datetime
@@ -14,8 +19,25 @@ from matplotlib import pyplot as plt
 from scipy.spatial.transform import Rotation as R
 import math
 
+
+import pandas as pd
+from datetime import datetime
+import time
+import os
 # from DetectAruco import detect_aruco_marks, compute_camera_pose, visualize_pose
 
+
+COLUMNS = [
+    'x_compute',
+    'y_compute',
+    'z_compute',
+    'rz_compute',
+    'x_original',
+    'y_original',
+    'z_original',
+    'rz_original',
+    'type'
+]
 
 # 加载相机内参
 def load_camera_parameters(camera_parameters_path):
@@ -382,3 +404,38 @@ def at_center(image, corners):
             at_center = True
 
     return at_center
+
+def initalize_csv(file_path,headers):
+    if not os.path.exists(file_path):
+        pd.DataFrame(columns=headers).to_csv(file_path,index=False)
+        # print(f'已创建CSV文件：{file_path}')
+
+        return 0
+
+    else:
+        # print(f'CSV文件已存在：{file_path}')
+        return 1
+
+
+def append_to_csv(file_path, data):
+    existing_df = pd.read_csv(file_path)
+    if isinstance(data,dict):
+        new_df = pd.DataFrame([data])
+    elif isinstance(data,list) and all(isinstance(item, dict) for item in data):
+        new_df = pd.DataFrame(data)
+    else:
+        raise ValueError("数据格式错误，请提供字典或字典列表")
+    for col in COLUMNS:
+        if col not in new_df.columns:
+            new_df[col] = np.nan
+
+        # 重新排序列以匹配表头
+    new_df = new_df[COLUMNS]
+
+    # 合并新旧数据
+    combined_df = pd.concat([existing_df, new_df], ignore_index=True)
+
+    # 保存回CSV文件
+    combined_df.to_csv(file_path, index=False)
+    # print(f"已追加 {len(new_df)} 条数据到 {file_path}")
+    return True
