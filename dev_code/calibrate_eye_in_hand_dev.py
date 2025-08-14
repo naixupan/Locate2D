@@ -280,32 +280,39 @@ def calibrate_(user_input):
         target_pose_list = target_pose.split(' ')
         robot_pose_f = [0,0,0,0,0,0]
         target_pose_f = [0,0,0,0,0,0]
+        logging.info('坐标转化，字符串->浮点数')
         for i in range(6):
             robot_pose_f[i] = float(robot_pose_list[i])
             target_pose_f[i] = float(target_pose_list[i])
         gripper2base = Pose2HomogeneousMatrix(robot_pose_f)
         total_pose = [0, 0, 0, 0, 0, 0]
         avg_pose = [0, 0, 0, 0, 0, 0]
-        for i in range(len(aruco_image_path)):
-            mark2camera = compute_aruco_pose(aruco_image_path[i], K, distCoeffs, 0.03, False, None)
-            mark2base = gripper2base @ cam2gripperMatrix @ mark2camera
-            mark_pose = HomogeneousMatrix2Pose(mark2base)
-            logging.info(f'mark_pose_{i}:{mark_pose}')
-            for j in range(6):
-                total_pose[j] += mark_pose[j]
+
+        logging.info('mark点定位')
+        # for i in range(len(aruco_image_path)):
+        mark2camera,_ = compute_aruco_pose(aruco_image_path1, K, distCoeffs, 0.03, False, None)
+        mark2base = gripper2base @ cam2gripperMatrix @ mark2camera
+        mark_pose = HomogeneousMatrix2Pose(mark2base)
+        # logging.info(f'mark_pose_{i}:{mark_pose}')
+        #     for j in range(6):
+        #         total_pose[j] += mark_pose[j]
         for i in range(6):
-            avg_pose[i] = total_pose[i] / 3
+            avg_pose[i] = mark_pose[i]
+
         logging.info(f'avg_pose:{avg_pose}')
 
         # 1表示计算水平拍照位到垂直拍照位的位姿
+
+        logging.info('开始进行相对位置计算')
         if comput_type == '1':
             dx = target_pose_f[0] - avg_pose[0]
             dy = target_pose_f[1] - avg_pose[1]
             dz = target_pose_f[2] - avg_pose[2]
             d_pose = [dx, dy, dz]
+            logging.info(f'd_pose:{d_pose};转化为numpy矩阵')
             d_pose_arr = np.array(d_pose, dtype=float)
             logging.info(f'拍照位1——>拍照位2 相对位姿:{d_pose_arr}')
-            parameter_save_name = f"{parameter_save_path}/shot_pose1_to_pose2.npy"
+            parameter_save_name = f"{parameter_save_path}/shot_pose1_to_pose2{serial_number}.npy"
             np.save(parameter_save_name, d_pose_arr)
             result_data["relative_position_1"] = parameter_save_name
             # return result_data

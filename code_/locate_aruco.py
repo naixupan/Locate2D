@@ -146,7 +146,7 @@ def locate_aruco_marks(user_imput):
     if locate_type == '1':
 
         if at_center_ == False:
-            result_data["code"] = error_code
+            result_data["code_"] = error_code
             result_data["msg"] = error_message
             result_data["at_center"] = '0'
             result_data["x"] = target_pose_[0]
@@ -160,7 +160,7 @@ def locate_aruco_marks(user_imput):
             dx = target2markMatrix[0]
             dy = target2markMatrix[1]
             dz = target2markMatrix[2]
-            result_data["code"] = error_code
+            result_data["code_"] = error_code
             result_data["msg"] = error_message
             result_data["at_center"] = '1'
 
@@ -176,7 +176,7 @@ def locate_aruco_marks(user_imput):
         T_target2mark = target2markMatrix
         T_target2base_ = T_mark2base @ T_target2mark
         target_pose_ = HomogeneousMatrix2Pose(T_target2base_)
-        result_data["code"] = error_code
+        result_data["code_"] = error_code
         result_data["msg"] = error_message
         result_data["x"] = target_pose_[0]
         result_data["y"] = target_pose_[1]
@@ -203,7 +203,7 @@ def main():
             # print('开始定位')
             result_data = locate_aruco_marks(user_input)
             if error_code != 200:
-                result_data["code"] = error_code
+                result_data["code_"] = error_code
                 result_data["msg"] = error_message
                 result_data["x"] = 0
                 result_data["y"] = 0
@@ -221,7 +221,7 @@ def main():
         except Exception as e:
             logging.error(f"Error: {e}")
             result_data = {}
-            result_data["code"] = error_code
+            result_data["code_"] = error_code
             result_data["msg"] = error_message
             result_data["x"] = 0
             result_data["y"] = 0

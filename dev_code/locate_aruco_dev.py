@@ -44,19 +44,23 @@ def locate_aruco_marks(user_imput):
         robot_poses = config.get("robot_pose")
         camera_prameter_path = config.get("camera_prameter_path")
         hand_eye_prameter_path = config.get("hand_eye_prameter_path")
-        save_folder = config.get("save_path")
+        save_folder = config.get("save_folder")
         relative_position_path = config.get("relative_position_path")
         original_coords = config.get("original_coords")
         adjust_center = config.get("adjust_center")
+        parameter_folder = config.get("parameter_folder")
 
         if locate_type == '1':
             relative_position_path_1 = config.get("relative_position_path_1")
-
+            if adjust_center == '1':
+                calculated = config.get("calculated")
     except Exception as e:
         logging.error(f'[{e}')
         error_code = 402
         error_message = 'Your input is invalid ! '
         return result_data
+
+
     
     K , distCoeffs = load_camera_parameters(camera_prameter_path)
     
@@ -66,6 +70,8 @@ def locate_aruco_marks(user_imput):
 
     if locate_type == '1':
         target2markMatrix_ = load_calibrate_matrix(relative_position_path_1)
+
+
 
     image_path_list = image_path.split('/')
     aruco_image_path1 = f'{image_path}-1.bmp'
@@ -77,22 +83,30 @@ def locate_aruco_marks(user_imput):
     logging.info(f'image_path1:{aruco_image_path1}')
     logging.info(f'image_path2:{aruco_image_path2}')
     logging.info(f'image_path3:{aruco_image_path3}')
-
+    logging.info(f'入参读取完成')
     aruco_image_path = [aruco_image_path1, aruco_image_path2, aruco_image_path3]
     pose_list = robot_poses.split(' ')
+    original_coords_list = original_coords.split(' ')
+    logging.info(f'坐标分割完成')
     # print(pose_list)
     robot_pose_num = []
     original_coords_num = []
+
+
 
     # for pose in pose_list:
     #     pose_num = float(pose)
     #     robot_pose_num.append(pose_num)
 
-    for i in Range(6):
+
+
+    for i in range(6):
         robot_pose_num_ = float(pose_list[i])
-        original_coords_num_ = float(original_coords[i])
+        original_coords_num_ = float(original_coords_list[i])
         robot_pose_num.append(robot_pose_num_)
         original_coords_num.append(original_coords_num_)
+
+    logging.info(f'坐标转浮点数完成')
 
 
     gripper2base = Pose2HomogeneousMatrix(robot_pose_num)
@@ -139,12 +153,14 @@ def locate_aruco_marks(user_imput):
         avg_pose[i] = target_pose[i]
 
 ##################### 测试数据计算 #####################
+
     csv_path = './data_record.csv'
-    inital_result = initalize_csv(csv_path,COLUMNS)
+    inital_result = initalize_csv(csv_path, COLUMNS)
     if inital_result == 0:
         logging.info(f'已创建CSV文件：{csv_path}')
     else:
         logging.info(f'CSV文件已存在：{csv_path}')
+
     # 第一次定位：水平拍照位，未调整中心点
     if locate_type == '1' and adjust_center == '0' :
         # 1阶段，水平拍照位数据计算
@@ -157,7 +173,7 @@ def locate_aruco_marks(user_imput):
         data_type = 1
 
     # 第二次定位，水平拍照位，调整中心点
-    elif locate_type == '1' and adjust_center == '1' :
+    elif locate_type == '1' and adjust_center == '1' and calculated =='0' :
         T_mark2base_test = Pose2HomogeneousMatrix(avg_pose)
         T_target2mark_test = target2markMatrix_
         T_target2base_test = T_mark2base_test @ T_target2mark_test
@@ -167,36 +183,62 @@ def locate_aruco_marks(user_imput):
         data_type = 2
 
     # 第三次定位，垂直拍照位
-    elif locate_type == '2':
-        T_mark2base = Pose2HomogeneousMatrix(avg_pose)
-        T_target2mark = target2markMatrix
-        T_target2base_ = T_mark2base @ T_target2mark
-        target_pose_test = HomogeneousMatrix2Pose(T_target2base_)
-        logging.info(f'### 3阶段计算结果：\n{target_pose_test}')
-        logging.info(f'### 原始数据：\n{original_coords}')
-        data_type = 3
+    elif locate_type == '2' or locate_type == '3':
+        # 循环读取文件夹文件
+        parameter_list = os.listdir(parameter_folder)
+        locate_number = 0
+        for parameter in parameter_list:
+            parameter_path = os.path.join(parameter_folder, parameter)
+            parameter_name = parameter.split('.')[0]
+            locate_number = parameter_name.split('_')[-1]
+            target2markMatrix = load_calibrate_matrix(parameter_path)
 
-    single_data = {
-        'x_compute': target_pose_test[0],
-        'y_compute': target_pose_test[1],
-        'z_compute': target_pose_test[2],
-        'rz_compute': target_pose_test[5],
-        'x_original': original_coords_num[0],
-        'y_original': original_coords_num[1],
-        'z_original': original_coords_num[2],
-        'rz_original': original_coords_num[5],
-        'type': data_type
-    }
 
-    if append_to_csv(csv_path, single_data):
-        logging.info(f'已追加 1条数据到 {csv_path}')
+            T_mark2base = Pose2HomogeneousMatrix(avg_pose)
+            T_target2mark = target2markMatrix
+            T_target2base_ = T_mark2base @ T_target2mark
+            target_pose_test = HomogeneousMatrix2Pose(T_target2base_)
+            logging.info(f'### 3阶段计算结果：\n{target_pose_test}')
+            logging.info(f'### 原始数据：\n{original_coords}')
+            if locate_type == '2':
+                data_type = 3
+            else:
+                data_type = 4
+
+    # if locate_type == '1' and adjust_center == '1' and calculated =='1'
+
+
+            single_data = {
+                'x_compute': target_pose_test[0],
+                'y_compute': target_pose_test[1],
+                'z_compute': target_pose_test[2],
+                'rz_compute': target_pose_test[5],
+                'x_original': original_coords_num[0],
+                'y_original': original_coords_num[1],
+                'z_original': original_coords_num[2],
+                'rz_original': original_coords_num[5],
+                'x_robot': robot_pose_num[0],
+                'y_robot': robot_pose_num[1],
+                'z_robot': robot_pose_num[2],
+                'rx_robot': robot_pose_num[3],
+                'ry_robot': robot_pose_num[4],
+                'rz_robot': robot_pose_num[5],
+                'type': data_type,
+                'locate_type': locate_number
+            }
+
+            logging.info(f'写入数据：{single_data}')
+
+
+            if append_to_csv(csv_path, single_data):
+                logging.info(f'已追加 1条数据到 {csv_path}')
 ######################################
 
     # 1表示第一次定位
     if locate_type == '1':
 
         if adjust_center == '0' or at_center_ == False:
-            result_data["code"] = error_code
+            result_data["code_"] = error_code
             result_data["msg"] = error_message
             result_data["at_center"] = '0'
             result_data["x"] = target_pose_[0]
@@ -210,7 +252,7 @@ def locate_aruco_marks(user_imput):
             dx = target2markMatrix[0]
             dy = target2markMatrix[1]
             dz = target2markMatrix[2]
-            result_data["code"] = error_code
+            result_data["code_"] = error_code
             result_data["msg"] = error_message
             result_data["at_center"] = '1'
 
@@ -221,12 +263,12 @@ def locate_aruco_marks(user_imput):
             result_data["ry"] = avg_pose[4]
             result_data["rz"] = avg_pose[5]
     # 2表示第二次定位
-    elif locate_type == '2':
+    elif locate_type == '2' or locate_type == '3':
         T_mark2base = Pose2HomogeneousMatrix(avg_pose)
         T_target2mark = target2markMatrix
         T_target2base_ = T_mark2base @ T_target2mark
         target_pose_ = HomogeneousMatrix2Pose(T_target2base_)
-        result_data["code"] = error_code
+        result_data["code_"] = error_code
         result_data["msg"] = error_message
         result_data["x"] = target_pose_[0]
         result_data["y"] = target_pose_[1]
@@ -252,7 +294,7 @@ def main():
         # print('开始定位')
         result_data = locate_aruco_marks(user_input)
         if error_code != 200:
-          result_data["code"] = error_code
+          result_data["code_"] = error_code
           result_data["msg"] = error_message
           result_data["x"] = 0
           result_data["y"] = 0
@@ -270,7 +312,7 @@ def main():
       except Exception as e:
         logging.error(f"Error: {e}")
         result_data = {}
-        result_data["code"] = error_code
+        result_data["code_"] = error_code
         result_data["msg"] = error_message
         result_data["x"] = 0
         result_data["y"] = 0

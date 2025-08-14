@@ -36,7 +36,14 @@ COLUMNS = [
     'y_original',
     'z_original',
     'rz_original',
-    'type'
+    'x_robot',
+    'y_robot',
+    'z_robot',
+    'rx_robot',
+    'ry_robot',
+    'rz_robot',
+    'type',
+    'locate_type'
 ]
 
 # 加载相机内参
