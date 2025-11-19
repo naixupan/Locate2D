@@ -48,12 +48,13 @@ def locate_aruco_marks(user_imput):
         relative_position_path = config.get("relative_position_path")
         original_coords = config.get("original_coords")
         adjust_center = config.get("adjust_center")
-        parameter_folder = config.get("parameter_folder")
+        # parameter_folder = config.get("parameter_folder")
+        # target_number = config.get("target_number")
 
-        if locate_type == '1':
-            relative_position_path_1 = config.get("relative_position_path_1")
-            if adjust_center == '1':
-                calculated = config.get("calculated")
+        # if locate_type == '1':
+        #     relative_position_path_1 = config.get("relative_position_path_1")
+        #     if adjust_center == '1':
+        #         calculated = config.get("calculated")
     except Exception as e:
         logging.error(f'[{e}')
         error_code = 402
@@ -68,8 +69,8 @@ def locate_aruco_marks(user_imput):
 
     target2markMatrix = load_calibrate_matrix(relative_position_path)
 
-    if locate_type == '1':
-        target2markMatrix_ = load_calibrate_matrix(relative_position_path_1)
+    # if locate_type == '1':
+    #     target2markMatrix_ = load_calibrate_matrix(relative_position_path_1)
 
 
 
@@ -88,18 +89,17 @@ def locate_aruco_marks(user_imput):
     pose_list = robot_poses.split(' ')
     original_coords_list = original_coords.split(' ')
     logging.info(f'坐标分割完成')
+
+    relative_position_name = relative_position_path.split('/')[-1]
+    front_name = relative_position_name.split('.')[0]
+    locate_number = front_name.split('_')[-1]
+    logging.info(f"读取当前测试位置：第{locate_number}号位")
+
+
+
     # print(pose_list)
     robot_pose_num = []
     original_coords_num = []
-
-
-
-    # for pose in pose_list:
-    #     pose_num = float(pose)
-    #     robot_pose_num.append(pose_num)
-
-
-
     for i in range(6):
         robot_pose_num_ = float(pose_list[i])
         original_coords_num_ = float(original_coords_list[i])
@@ -162,76 +162,80 @@ def locate_aruco_marks(user_imput):
         logging.info(f'CSV文件已存在：{csv_path}')
 
     # 第一次定位：水平拍照位，未调整中心点
-    if locate_type == '1' and adjust_center == '0' :
-        # 1阶段，水平拍照位数据计算
-        T_mark2base_test = Pose2HomogeneousMatrix(avg_pose)
-        T_target2mark_test = target2markMatrix_
-        T_target2base_test = T_mark2base_test @ T_target2mark_test
-        target_pose_test = HomogeneousMatrix2Pose(T_target2base_test)
-        logging.info(f'### 1阶段计算结果：\n{target_pose_test}')
-        logging.info(f'### 原始数据：\n{original_coords}')
-        data_type = 1
+    # if locate_type == '1' and adjust_center == '0' :
+    #     # 1阶段，水平拍照位数据计算
+    #     T_mark2base_test = Pose2HomogeneousMatrix(avg_pose)
+    #     T_target2mark_test = target2markMatrix_
+    #     T_target2base_test = T_mark2base_test @ T_target2mark_test
+    #     target_pose_test = HomogeneousMatrix2Pose(T_target2base_test)
+    #     logging.info(f'### 1阶段计算结果：\n{target_pose_test}')
+    #     logging.info(f'### 原始数据：\n{original_coords}')
+    #     data_type = 1
 
     # 第二次定位，水平拍照位，调整中心点
-    elif locate_type == '1' and adjust_center == '1' and calculated =='0' :
-        T_mark2base_test = Pose2HomogeneousMatrix(avg_pose)
-        T_target2mark_test = target2markMatrix_
-        T_target2base_test = T_mark2base_test @ T_target2mark_test
-        target_pose_test = HomogeneousMatrix2Pose(T_target2base_test)
-        logging.info(f'### 2阶段计算结果：\n{target_pose_test}')
-        logging.info(f'### 原始数据：\n{original_coords}')
-        data_type = 2
+    # elif locate_type == '1' and adjust_center == '1' and calculated =='0' :
+    #     T_mark2base_test = Pose2HomogeneousMatrix(avg_pose)
+    #     T_target2mark_test = target2markMatrix_
+    #     T_target2base_test = T_mark2base_test @ T_target2mark_test
+    #     target_pose_test = HomogeneousMatrix2Pose(T_target2base_test)
+    #     logging.info(f'### 2阶段计算结果：\n{target_pose_test}')
+    #     logging.info(f'### 原始数据：\n{original_coords}')
+    #     data_type = 2
 
     # 第三次定位，垂直拍照位
-    elif locate_type == '2' or locate_type == '3':
-        # 循环读取文件夹文件
-        parameter_list = os.listdir(parameter_folder)
-        locate_number = 0
-        for parameter in parameter_list:
-            parameter_path = os.path.join(parameter_folder, parameter)
-            parameter_name = parameter.split('.')[0]
-            locate_number = parameter_name.split('_')[-1]
-            target2markMatrix = load_calibrate_matrix(parameter_path)
-
-
-            T_mark2base = Pose2HomogeneousMatrix(avg_pose)
-            T_target2mark = target2markMatrix
-            T_target2base_ = T_mark2base @ T_target2mark
-            target_pose_test = HomogeneousMatrix2Pose(T_target2base_)
-            logging.info(f'### 3阶段计算结果：\n{target_pose_test}')
-            logging.info(f'### 原始数据：\n{original_coords}')
-            if locate_type == '2':
-                data_type = 3
-            else:
-                data_type = 4
+    # elif locate_type == '2' or locate_type == '3':
+    #     # 循环读取文件夹文件
+    #     parameter_list = os.listdir(parameter_folder)
+    #     locate_number = 0
+    #     for parameter in parameter_list:
+    #         parameter_path = os.path.join(parameter_folder, parameter)
+    #         parameter_name = parameter.split('.')[0]
+    #         locate_number = parameter_name.split('_')[-1]
+    #         target2markMatrix = load_calibrate_matrix(parameter_path)
+    #
+    #
+    #         T_mark2base = Pose2HomogeneousMatrix(avg_pose)
+    #         T_target2mark = target2markMatrix
+    #         T_target2base_ = T_mark2base @ T_target2mark
+    #         target_pose_test = HomogeneousMatrix2Pose(T_target2base_)
+    #         logging.info(f'### 3阶段计算结果：\n{target_pose_test}')
+    #         logging.info(f'### 原始数据：\n{original_coords}')
+    #         if locate_type == '2':
+    #             data_type = 3
+    #         else:
+    #             data_type = 4
 
     # if locate_type == '1' and adjust_center == '1' and calculated =='1'
 
+    # T_mark2base_test = Pose2HomogeneousMatrix(avg_pose)
+    # T_target2mark_test = target2markMatrix
+    # T_target2base_test = T_mark2base_test @ T_target2mark_test
+    # target_pose_test = HomogeneousMatrix2Pose(T_target2base_test)
 
-            single_data = {
-                'x_compute': target_pose_test[0],
-                'y_compute': target_pose_test[1],
-                'z_compute': target_pose_test[2],
-                'rz_compute': target_pose_test[5],
-                'x_original': original_coords_num[0],
-                'y_original': original_coords_num[1],
-                'z_original': original_coords_num[2],
-                'rz_original': original_coords_num[5],
-                'x_robot': robot_pose_num[0],
-                'y_robot': robot_pose_num[1],
-                'z_robot': robot_pose_num[2],
-                'rx_robot': robot_pose_num[3],
-                'ry_robot': robot_pose_num[4],
-                'rz_robot': robot_pose_num[5],
-                'type': data_type,
-                'locate_type': locate_number
-            }
-
-            logging.info(f'写入数据：{single_data}')
-
-
-            if append_to_csv(csv_path, single_data):
-                logging.info(f'已追加 1条数据到 {csv_path}')
+            # single_data = {
+            #     'x_compute': target_pose_test[0],
+            #     'y_compute': target_pose_test[1],
+            #     'z_compute': target_pose_test[2],
+            #     'rz_compute': target_pose_test[5],
+            #     'x_original': original_coords_num[0],
+            #     'y_original': original_coords_num[1],
+            #     'z_original': original_coords_num[2],
+            #     'rz_original': original_coords_num[5],
+            #     'x_robot': robot_pose_num[0],
+            #     'y_robot': robot_pose_num[1],
+            #     'z_robot': robot_pose_num[2],
+            #     'rx_robot': robot_pose_num[3],
+            #     'ry_robot': robot_pose_num[4],
+            #     'rz_robot': robot_pose_num[5],
+            #     'type': data_type,
+            #     'locate_type': locate_number
+            # }
+            #
+            # logging.info(f'写入数据：{single_data}')
+            #
+            #
+            # if append_to_csv(csv_path, single_data):
+            #     logging.info(f'已追加 1条数据到 {csv_path}')
 ######################################
 
     # 1表示第一次定位
@@ -276,6 +280,35 @@ def locate_aruco_marks(user_imput):
         result_data["rx"] = target_pose_[3]
         result_data["ry"] = target_pose_[4]
         result_data["rz"] = target_pose_[5]
+
+        # 测试数据写入
+        single_data = {
+            'x_compute': target_pose_[0],
+            'y_compute': target_pose_[1],
+            'z_compute': target_pose_[2],
+            'rx_compute': target_pose_[3],
+            'ry_compute': target_pose_[4],
+            'rz_compute': target_pose_[5],
+            'x_original': original_coords_num[0],
+            'y_original': original_coords_num[1],
+            'z_original': original_coords_num[2],
+            'rx_original': original_coords_num[3],
+            'ry_original': original_coords_num[4],
+            'rz_original': original_coords_num[5],
+            'x_robot': robot_pose_num[0],
+            'y_robot': robot_pose_num[1],
+            'z_robot': robot_pose_num[2],
+            'rx_robot': robot_pose_num[3],
+            'ry_robot': robot_pose_num[4],
+            'rz_robot': robot_pose_num[5],
+            'locate_type': locate_number
+        }
+
+        logging.info(f'写入数据：{single_data}')
+
+
+        if append_to_csv(csv_path, single_data):
+            logging.info(f'已追加 1条数据到 {csv_path}')
     
     end_time = datetime.datetime.now()
     logging.info(f"第{locate_type}阶段算法用时：{end_time - time_begin}")

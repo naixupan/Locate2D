@@ -10,6 +10,7 @@
 
 
 '''
+import logging
 import os
 from datetime import datetime
 
@@ -31,10 +32,14 @@ COLUMNS = [
     'x_compute',
     'y_compute',
     'z_compute',
+    'rx_compute',
+    'ry_compute',
     'rz_compute',
     'x_original',
     'y_original',
     'z_original',
+    'rx_original',
+    'ry_original',
     'rz_original',
     'x_robot',
     'y_robot',
@@ -42,7 +47,6 @@ COLUMNS = [
     'rx_robot',
     'ry_robot',
     'rz_robot',
-    'type',
     'locate_type'
 ]
 
@@ -322,14 +326,17 @@ def draw_circle_grid(image, centers, pattern_size=(7, 7)):
 
 def detect_aruco_marks(image_path):
   image = cv2.imread(image_path)
+  gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+  ret, img = cv2.threshold(gray, 110, 255, cv2.THRESH_BINARY);
   
   if image is None:
     raise FileNotFoundError(f"未找到图像：{image_path}")
   # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
   aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_250)
   detector = cv2.aruco.ArucoDetector(aruco_dict, cv2.aruco.DetectorParameters())
-  corners, ids, _ = detector.detectMarkers(image)
-  return image, corners, ids
+  corners, ids, _ = detector.detectMarkers(img)
+  return img, corners, ids
   
 def compute_camera_pose(corners, ids, K, distCoeffs, MARKER_SIZE):
   if ids is None:
@@ -390,6 +397,8 @@ def compute_aruco_pose(image_path,K,distCoeffs,marker_size, save_image=True, sav
         if save_image:
             visualize_pose(image, rvec, tvec, corners, ids, mark_in_camera, camera_in_mark, K, distCoeffs,save_path)
         R_arr = np.array(R, dtype=np.float64)
+    else:
+        logging.error(f'未检测到Mark点角点')
     t_arr = np.array(tvec, dtype=np.float64).flatten()
     matrix_ = np.eye(4, dtype=np.float32)
     matrix_[:3, :3] = R_arr
