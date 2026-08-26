@@ -55,6 +55,8 @@ def locate_aruco_marks(user_imput):
         #     relative_position_path_1 = config.get("relative_position_path_1")
         #     if adjust_center == '1':
         #         calculated = config.get("calculated")
+        action_type = config.get("action_type")
+
     except Exception as e:
         logging.error(f'[{e}')
         error_code = 402
@@ -282,6 +284,7 @@ def locate_aruco_marks(user_imput):
         result_data["rz"] = target_pose_[5]
 
         # 测试数据写入
+        # action_type:
         single_data = {
             'x_compute': target_pose_[0],
             'y_compute': target_pose_[1],
@@ -295,13 +298,8 @@ def locate_aruco_marks(user_imput):
             'rx_original': original_coords_num[3],
             'ry_original': original_coords_num[4],
             'rz_original': original_coords_num[5],
-            'x_robot': robot_pose_num[0],
-            'y_robot': robot_pose_num[1],
-            'z_robot': robot_pose_num[2],
-            'rx_robot': robot_pose_num[3],
-            'ry_robot': robot_pose_num[4],
-            'rz_robot': robot_pose_num[5],
-            'locate_type': locate_number
+            'locate_type': locate_number,
+            'action_type':action_type
         }
 
         logging.info(f'写入数据：{single_data}')
