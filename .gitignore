@@ -6,3 +6,5 @@ dist/
 .idea/
 *.log
 build/
+__pycache__/
+*.csv
