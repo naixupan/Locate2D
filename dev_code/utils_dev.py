@@ -41,13 +41,8 @@ COLUMNS = [
     'rx_original',
     'ry_original',
     'rz_original',
-    'x_robot',
-    'y_robot',
-    'z_robot',
-    'rx_robot',
-    'ry_robot',
-    'rz_robot',
-    'locate_type'
+    'locate_type',
+    'action_type'
 ]
 
 # 加载相机内参
